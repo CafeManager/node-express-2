@@ -90,6 +90,18 @@ describe("POST /auth/login", function() {
     expect(username).toBe("u1");
     expect(admin).toBe(false);
   });
+
+  // TESTS BUG #2
+  test("should raise a 401 on invalid credentials", async function() {
+    const response = await request(app)
+      .post("/auth/login")
+      .send({
+        username: "u1",
+        password: "WRONG PASSWORD!"
+      });
+    expect(response.statusCode).toBe(401);
+
+  });
 });
 
 describe("GET /users", function() {
@@ -105,6 +117,19 @@ describe("GET /users", function() {
     expect(response.statusCode).toBe(200);
     expect(response.body.users.length).toBe(3);
   });
+
+  // TEST BUG #1
+  test("should show basic user information", async function() {
+    const response = await request(app)
+      .get("/users")
+      .send({ _token: tokens.u1 });
+    
+    expect(Object.keys(response.body.users[0])).toEqual(["username", "first_name", "last_name"])
+    expect(response.statusCode).toBe(200);
+    
+  });
+
+
 });
 
 describe("GET /users/[username]", function() {
@@ -125,6 +150,15 @@ describe("GET /users/[username]", function() {
       email: "email1",
       phone: "phone1"
     });
+  });
+
+  // TESTS BUG #3
+  test("should raise a 404 on invalid username", async function() {
+    const response = await request(app)
+      .post("/users/INVALIDUSER")
+      .send({ _token: tokens.u1 });
+
+    expect(response.statusCode).toBe(404);
   });
 });
 

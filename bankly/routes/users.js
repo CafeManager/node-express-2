@@ -18,6 +18,15 @@ const { authUser, requireLogin, requireAdmin } = require('../middleware/auth');
 router.get('/', authUser, requireLogin, async function(req, res, next) {
   try {
     let users = await User.getAll();
+    
+    // FIXES BUG #1
+      users = users.map(user => {
+        return {
+        "username": user.username,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+      }
+    })
     return res.json({ users });
   } catch (err) {
     return next(err);
@@ -63,7 +72,8 @@ router.get('/:username', authUser, requireLogin, async function(
  *
  */
 
-router.patch('/:username', authUser, requireLogin, requireAdmin, async function(
+// FIXES BUG #4
+router.patch('/:username', authUser, requireLogin, async function(
   req,
   res,
   next
@@ -74,7 +84,8 @@ router.patch('/:username', authUser, requireLogin, requireAdmin, async function(
     }
 
     // get fields to change; remove token so we don't try to change it
-    let fields = { ...req.body };
+    let fields = { ...req.body }; 
+    delete fields.admin
     delete fields._token;
 
     let user = await User.update(req.params.username, fields);
